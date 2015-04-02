@@ -147,6 +147,8 @@
     <storages>
     </storages>
     <users>
+        <user name="root"  password="root"  resources="*"/>
+        <user name="guest" password="guest" resources="connect,server.listDatabases,server.dblist"/>
     </users>
     <properties>
         <!-- DATABASE POOL: size min/max -->
