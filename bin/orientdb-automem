@@ -80,6 +80,7 @@ exec /usr/bin/java \
   -Dorientdb.www.path="$WWW_PATH" \
   -Dorientdb.build.number="UNKNOWN@r${buildNumber}; 2015-03-31 18:22:35+0000" \
   -DORIENTDB_HOME="$ORIENTDB_HOME" \
+  -DORIENTDB_NODE_NAME="$ODB_CLUSTER_NODE"
   -cp "$ORIENTDB_HOME/lib/orientdb-server-2.0.6.jar:$ORIENTDB_HOME/lib/*" \
   com.orientechnologies.orient.server.OServerMain \
   2>&1 | tee /orientdb/logs/orientdb.out
