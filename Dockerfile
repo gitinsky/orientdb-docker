@@ -16,7 +16,7 @@ ENV ODB_PKG_NAME orientdb-community-2.0.6
 # Install Elasticsearch.
 RUN \
   cd / && \
-  wget "http://www.orientechnologies.com/download.php?email=unknown@unknown.com&file=${ODB_PKG_NAME}.tar.gz&os=linux" && \
+  wget -O ${ODB_PKG_NAME}.tar.gz "http://www.orientechnologies.com/download.php?email=unknown@unknown.com&file=${ODB_PKG_NAME}.tar.gz&os=linux" && \
   tar xvzf $ODB_PKG_NAME.tar.gz && \
   rm -f $ODB_PKG_NAME.tar.gz && \
   mv /$ODB_PKG_NAME /orientdb
