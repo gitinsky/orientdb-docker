@@ -8,6 +8,8 @@ JAVA_OPTS_SCRIPT="-Djna.nosys=true -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.he
 LOG_FILE=$ORIENTDB_HOME/config/orientdb-server-log.properties
 WWW_PATH=$ORIENTDB_HOME/www
 
+buildNumber=""
+
 
 # ODB_MEM_PC must be passed on docker run:
 #  sudo docker run -e ODB_MEM_PC=70 ...
