@@ -1,0 +1,82 @@
+#!/bin/sh -eu
+
+ORIENTDB_HOME=/orientdb
+JAVA_OPTS=""
+ORIENTDB_SETTINGS="-Dprofiler.enabled=true -Ddistributed=true"
+JAVA_OPTS_SCRIPT="-Djna.nosys=true -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.headless=true -Dfile.encoding=UTF8 -Drhino.opt.level=9"
+LOG_FILE=$ORIENTDB_HOME/config/orientdb-server-log.properties
+WWW_PATH=$ORIENTDB_HOME/www
+
+
+# ODB_MEM_PC must be passed on docker run:
+#  sudo docker run -e ODB_MEM_PC=70 ...
+
+tee /orientdb/config/hazelcast.xml <<EOF
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-basic.xsd"
+ xmlns="http://www.hazelcast.com/schema/config"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <properties>
+  <property name="hazelcast.mancenter.enabled">false</property>
+  <property name="hazelcast.memcache.enabled">false</property>
+  <property name="hazelcast.rest.enabled">false</property>
+  <property name="hazelcast.wait.seconds.before.join">0</property>
+  <property name="hazelcast.logging.type">jdk</property>
+  <property name="hazelcast.local.localAddress">$(ifconfig eth0|grep 'inet addr'|cut -d : -f 2|cut -d ' ' -f 1)</property>
+  <property name="hazelcast.socket.server.bind.any">false</property>
+  <property name="hazelcast.socket.client.bind">false</property>
+ </properties>
+ <group>
+  <name>$ODB_CLUSTER_NAME</name>
+  <password>946F6E21-E8C9-4A8B-B1C7-1A4849EE5DCC</password>
+ </group>
+ <network>
+  <public-address>$ODB_NODE_IP:2434</public-address>
+  <port auto-increment="false">2434</port>
+  <join>
+   <multicast enabled="false"/>
+   <aws enabled="false"/>
+   <tcp-ip enabled="true">
+    $(for nodeAddr in $(echo $ODB_CLUSTER_PEERS|tr ',' ' ')
+        do
+         echo "<member>$nodeAddr:2434</member>"
+        done
+     )
+    <hostname>$ODB_NODE_IP:2434</hostname>
+    <conn-timeout-seconds>30</conn-timeout-seconds>
+   </tcp-ip>
+  </join>
+  <symmetric-encryption enabled="false"/>
+  <asymmetric-encryption enabled="false"/>
+ </network>
+ <executor-service>
+  <core-pool-size>4</core-pool-size>
+  <max-pool-size>20</max-pool-size>
+  <keep-alive-seconds>60</keep-alive-seconds>
+ </executor-service>
+ <map name="subs">
+  <backup-count>1</backup-count>
+  <max-idle-seconds>0</max-idle-seconds>
+  <eviction-policy>NONE</eviction-policy>
+  <max-size policy="cluster_wide_map_size">0</max-size>
+  <eviction-percentage>25</eviction-percentage>
+  <merge-policy>hz.LATEST_UPDATE</merge-policy>
+ </map>
+</hazelcast>
+EOF
+
+export ODB_HEAP_SIZE="$(($(free -m|grep '^Mem:'|awk '{print $2}') * $ODB_MEM_PC / 100))m"
+
+exec /usr/bin/java \
+  $JAVA_OPTS \
+  -XX:+UseG1GC \
+  -Xmx${ODB_HEAP_SIZE} \
+  $JAVA_OPTS_SCRIPT \
+  $ORIENTDB_SETTINGS \
+  -Djava.util.logging.config.file="$LOG_FILE" \
+  -Dorientdb.config.file="$CONFIG_FILE" \
+  -Dorientdb.www.path="$WWW_PATH" \
+  -Dorientdb.build.number="UNKNOWN@r${buildNumber}; 2015-03-31 18:22:35+0000" \
+  -cp "$ORIENTDB_HOME/lib/orientdb-server-2.0.6.jar:$ORIENTDB_HOME/lib/*" \
+  com.orientechnologies.orient.server.OServerMain \
+  1> /orientdb/logs/orientdb.log \
+  2> /orientdb/logs/orientdb.err
