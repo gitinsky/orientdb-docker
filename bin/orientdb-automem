@@ -79,5 +79,4 @@ exec /usr/bin/java \
   -Dorientdb.build.number="UNKNOWN@r${buildNumber}; 2015-03-31 18:22:35+0000" \
   -cp "$ORIENTDB_HOME/lib/orientdb-server-2.0.6.jar:$ORIENTDB_HOME/lib/*" \
   com.orientechnologies.orient.server.OServerMain \
-  1> /orientdb/logs/orientdb.log \
-  2> /orientdb/logs/orientdb.err
+  2>&1 | tee /orientdb/logs/orientdb.out
